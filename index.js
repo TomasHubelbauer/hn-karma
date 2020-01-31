@@ -1,5 +1,11 @@
 const https = require('https');
 const fs = require('fs');
+let email;
+try {
+  email = require('../self-email');
+} catch (error) {
+  // Ignore the failure to reference the self-email script on agents which don't have it
+}
 
 const user = process.argv[2];
 if (!user) {
@@ -32,8 +38,33 @@ const request = https.request(options, response => {
       ? new RegExp(`<a id='me' href="user\\?id=${user}">${user}<\\/a>\\s+\\((?<karma>\\d+)\\)`, 'gm')
       : new RegExp(`<td valign="top">karma:<\\/td><td>\\s*(?<karma>\\d+)\\s*<\/td>`);
     const match = regex.exec(content);
-    console.log(match.groups.karma);
-    fs.writeFile('karma.hn', match.groups.karma, () => void 0);
+    const karma = Number(match.groups.karma);
+    console.log(karma);
+    let oldKarma;
+    try {
+      oldKarma = Number(fs.readFileSync('karma.hn', { encoding: 'ascii' }));
+    } catch (error) {
+      // Ignore the failed attempt to read the old karma if the file doesn't exist yet
+    }
+
+    fs.writeFile('karma.hn', karma, () => void 0);
+    if (email) {
+      email(`
+From: Hacker News Karma <bot@hubelbauer.net>
+To: Tomas Hubelbauer <tomas@hubelbauer.net>
+Subject: Hacker News Karma: ${karma}
+Content-Type: text/html
+
+Your Hacker News karma is ${karma}.
+      ${
+        oldKarma && oldKarma !== karma
+          ? `It's ${Math.abs(karma - oldKarma)} ${Math.sign(karma - oldKarma) === 1 ? 'up' : 'down'} since yesterday.`
+          : 'It has seen no change since yesterday.'
+        }
+
+Thanks!
+`);
+    }
   });
 });
 
