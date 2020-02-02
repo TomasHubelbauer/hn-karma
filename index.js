@@ -7,12 +7,12 @@ try {
   // Ignore the failure to reference the self-email script on agents which don't have it
 }
 
-const user = process.argv[2];
+const user = process.argv[2] || process.env.HN_USER;
 if (!user) {
-  throw new Error('The `user` command line argument value not provided.');
+  throw new Error('The `user` command line argument or `HN_USER` environment variable not provided.');
 }
 
-const token = process.argv[3];
+const token = process.argv[3] || process.env.HN_TOKEN;
 
 /** @type {https.RequestOptions} */
 const options = token ?
