@@ -1,11 +1,7 @@
 const https = require('https');
 const fs = require('fs');
-let email;
-try {
-  email = require('../self-email');
-} catch (error) {
-  // Ignore the failure to reference the self-email script on agents which don't have it
-}
+const email = require('../self-email');
+const headers = require('../self-email/headers');
 
 const user = process.argv[2] || process.env.HN_USER;
 if (!user) {
@@ -33,7 +29,7 @@ const request = https.request(options, response => {
   response.setEncoding('ascii');
   let content = '';
   response.on('data', chunk => content += chunk);
-  response.on('end', () => {
+  response.on('end', async () => {
     const regex = token
       ? new RegExp(`<a id='me' href="user\\?id=${user}">${user}<\\/a>\\s+\\((?<karma>\\d+)\\)`, 'gm')
       : new RegExp(`<td valign="top">karma:<\\/td><td>\\s*(?<karma>\\d+)\\s*<\/td>`);
@@ -48,23 +44,13 @@ const request = https.request(options, response => {
     }
 
     fs.writeFile('karma.hn', karma, () => void 0);
-    if (email) {
-      email(`
-From: Hacker News Karma <bot@hubelbauer.net>
-To: Tomas Hubelbauer <tomas@hubelbauer.net>
-Subject: Hacker News Karma: ${karma}
-Content-Type: text/html
 
-Your Hacker News karma is ${karma}.
-      ${
-        oldKarma && oldKarma !== karma
-          ? `It's ${Math.abs(karma - oldKarma)} ${Math.sign(karma - oldKarma) === 1 ? 'up' : 'down'} since yesterday.`
-          : 'It has seen no change since yesterday.'
-        }
+    const change = oldKarma && oldKarma !== karma
+      ? `It's ${Math.abs(karma - oldKarma)} ${Math.sign(karma - oldKarma) === 1 ? 'up' : 'down'}`
+      : 'It has seen no change'
+      ;
 
-Thanks!
-`);
-    }
+    await email(headers('HN Karma', karma), `Your HN karma is ${karma}. ${change} since yesterday.`);
   });
 });
 
