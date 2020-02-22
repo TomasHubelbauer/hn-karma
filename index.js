@@ -60,3 +60,6 @@ const request = https.request(options, response => {
 });
 
 request.end();
+
+// TODO: Use node-fetch and export a promise for the runner
+module.exports = new Promise(resolve => resolve());
