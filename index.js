@@ -56,10 +56,12 @@ const request = https.request(options, response => {
       ;
 
     await email(
-      subject(`HN Karma: ` + karma),
-      sender('Hacker News <bot@hubelbauer.net>'),
-      recipient('Tomas Hubelbauer <tomas@hubelbaur.net>'),
-      `Your HN karma is ${karma}. ${change} since yesterday.`
+      eml(
+        subject(`HN Karma: ` + karma),
+        sender('Hacker News <bot@hubelbauer.net>'),
+        recipient('Tomas Hubelbauer <tomas@hubelbaur.net>'),
+        `Your HN karma is ${karma}. ${change} since yesterday.`
+      )
     );
   });
 });
