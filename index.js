@@ -21,6 +21,9 @@ const options = token ?
   }
   : `https://news.ycombinator.com/user?id=${user}`;
 
+const userPageRegex = new RegExp(`<a id='me' href="user\\?id=${user}">${user}<\\/a>\\s+\\((?<karma>\\d+)\\)`, 'gm');
+const homePageRegex = new RegExp(`<td valign="top">karma:<\\/td><td>\\s*(?<karma>\\d+)\\s*<\/td>`);
+
 const request = https.request(options, response => {
   if (response.statusCode !== 200 || response.statusMessage !== 'OK') {
     throw new Error(`Expected 200 OK but got ${response.statusCode} ${response.statusMessage}.`);
@@ -30,10 +33,12 @@ const request = https.request(options, response => {
   let content = '';
   response.on('data', chunk => content += chunk);
   response.on('end', async () => {
-    const regex = token
-      ? new RegExp(`<a id='me' href="user\\?id=${user}">${user}<\\/a>\\s+\\((?<karma>\\d+)\\)`, 'gm')
-      : new RegExp(`<td valign="top">karma:<\\/td><td>\\s*(?<karma>\\d+)\\s*<\/td>`);
+    const regex = token ? userPageRegex : homePageRegex;
     const match = regex.exec(content);
+    if (!match) {
+      throw new Error(`The pattern ${regex.source} not found on ${JSON.stringify(options)}.`);
+    }
+
     const karma = Number(match.groups.karma);
     console.log(karma);
     let oldKarma;
