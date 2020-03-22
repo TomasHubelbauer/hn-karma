@@ -1,8 +1,7 @@
 const https = require('https');
 const fs = require('fs');
 const email = require('../self-email');
-const headers = require('../self-email/headers');
-const footer = require('../self-email/footer');
+const { subject, sender, recipient } = require('../self-email');
 
 const user = process.argv[2] || process.env.HN_USER;
 if (!user) {
@@ -52,9 +51,10 @@ const request = https.request(options, response => {
       ;
 
     await email(
-      headers(karma, 'Hacker News'),
-      `Your HN karma is ${karma}. ${change} since yesterday.`,
-      ...footer('Hacker News')
+      subject(`HN Karma: ` + karma),
+      sender('Hacker News <bot@hubelbauer.net>'),
+      recipient('Tomas Hubelbauer <tomas@hubelbaur.net>'),
+      `Your HN karma is ${karma}. ${change} since yesterday.`
     );
   });
 });
