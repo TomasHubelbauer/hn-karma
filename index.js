@@ -1,7 +1,7 @@
 const https = require('https');
 const fs = require('fs');
 const email = require('../self-email');
-const { subject, sender, recipient } = require('../self-email');
+const { eml, subject, sender, recipient } = require('../self-email');
 
 const user = process.argv[2] || process.env.HN_USER;
 if (!user) {
