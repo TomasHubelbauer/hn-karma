@@ -1,5 +1,6 @@
 const https = require('https');
-const fs = require('fs');
+const fs = require('fs-extra');
+const path = require('path');
 const email = require('../self-email');
 const { eml, subject, sender, recipient } = require('../self-email');
 
@@ -43,12 +44,12 @@ const request = https.request(options, response => {
     console.log(karma);
     let oldKarma;
     try {
-      oldKarma = Number(fs.readFileSync('karma.hn', { encoding: 'ascii' }));
+      oldKarma = Number(await fs.readFileSync(path.join(__dirname, 'karma.hn'), { encoding: 'ascii' }));
     } catch (error) {
       // Ignore the failed attempt to read the old karma if the file doesn't exist yet
     }
 
-    fs.writeFile('karma.hn', karma, () => void 0);
+    await fs.writeFile(path.join(__dirname, 'karma.hn'), karma, () => void 0);
 
     const change = oldKarma && oldKarma !== karma
       ? `It's ${Math.abs(karma - oldKarma)} ${Math.sign(karma - oldKarma) === 1 ? 'up' : 'down'}`
